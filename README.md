@@ -1,6 +1,6 @@
 # World Cup 2026 Sweepstake — Live Standings
 
-A self-hosted live leaderboard for a **24-person 2026 World Cup sweepstake**.
+A self-hosted live leaderboard for a **24-person 2026 World Cup Sweepstake**.
 Each player has 2 teams, points roll in automatically as matches
 finish, and a phone-friendly dashboard shows the standings in real time.
 
