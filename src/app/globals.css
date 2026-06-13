@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Floodlit-pitch dark theme: deep green-black base, hot gold accent. */
+    --background: 160 35% 4%;
+    --foreground: 45 25% 95%;
+    --card: 158 24% 8%;
+    --card-foreground: 45 25% 95%;
+    --popover: 158 24% 8%;
+    --popover-foreground: 45 25% 95%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 36 90% 8%;
+    --secondary: 158 18% 13%;
+    --secondary-foreground: 45 25% 95%;
+    --muted: 158 16% 13%;
+    --muted-foreground: 150 10% 62%;
+    --accent: 158 22% 16%;
+    --accent-foreground: 45 25% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 157 18% 15%;
+    --input: 157 18% 15%;
+    --ring: 43 96% 56%;
+    --radius: 0.9rem;
+
+    --pitch: 152 55% 22%;
+    --pitch-deep: 158 45% 12%;
+    --gold: 43 96% 56%;
+    --live: 0 86% 60%;
+
+    /* Draw-tier colours (data-categorical, mirror the six seeding pots). */
+    --tier-1: 145 70% 38%;
+    --tier-2: 217 80% 55%;
+    --tier-3: 24 90% 50%;
+    --tier-4: 271 70% 58%;
+    --tier-5: 0 72% 51%;
+    --tier-6: 215 14% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+  }
+
+  body {
+    background-image:
+      radial-gradient(1100px 500px at 50% -120px, hsl(var(--pitch) / 0.5), transparent 70%),
+      radial-gradient(700px 350px at 85% 0%, hsl(var(--gold) / 0.07), transparent 70%);
+    background-repeat: no-repeat;
+  }
+}
+
+@layer utilities {
+  /* Mown-grass stripes for the hero band. */
+  .pitch-stripes {
+    background-image: repeating-linear-gradient(
+      100deg,
+      hsl(var(--foreground) / 0.025) 0px,
+      hsl(var(--foreground) / 0.025) 48px,
+      transparent 48px,
+      transparent 96px
+    );
+  }
+
+  .text-glow-gold {
+    text-shadow: 0 0 28px hsl(var(--gold) / 0.35);
+  }
+}

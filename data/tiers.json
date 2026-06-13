@@ -1,0 +1,57 @@
+{
+  "tier1": [
+    "France",
+    "Spain",
+    "Argentina",
+    "England",
+    "Portugal",
+    "Brazil",
+    "Netherlands",
+    "Morocco",
+    "Belgium"
+  ],
+  "tier2": [
+    "Germany",
+    "Croatia",
+    "Colombia",
+    "Senegal",
+    "Mexico",
+    "USA",
+    "Uruguay",
+    "Japan",
+    "Switzerland"
+  ],
+  "tier3": [
+    "Iran",
+    "Turkey",
+    "Ecuador",
+    "Austria",
+    "South Korea",
+    "Australia",
+    "Algeria",
+    "Egypt",
+    "Canada"
+  ],
+  "tier4": [
+    "Norway",
+    "Panama",
+    "Ivory Coast",
+    "Sweden",
+    "Paraguay",
+    "Czech Republic",
+    "Scotland",
+    "Tunisia",
+    "DR Congo"
+  ],
+  "tier5": [
+    "Uzbekistan",
+    "Qatar",
+    "Iraq",
+    "South Africa",
+    "Saudi Arabia",
+    "Jordan",
+    "Bosnia-Herzegovina",
+    "Cape Verde",
+    "Ghana"
+  ]
+}

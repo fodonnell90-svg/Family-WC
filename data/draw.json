@@ -1,0 +1,35 @@
+{
+  "seed": "wc2026-sweepstake-24p-family",
+  "players": [
+    "Mam", "Dad", "Francis", "Ali", "Aisling", "Emma",
+    "Jordan", "Kate", "Aoife", "Mick", "Anne", "Sharon",
+    "Maureen", "Ray", "Anna", "Ailbhe", "Declan", "Mary",
+    "Michelle", "Kev", "Mark", "Adam", "James", "Nana"
+  ],
+  "assignments": {
+    "Mam":     ["Ecuador", "Curaçao"],
+    "Dad":     ["Spain", "Uzbekistan"],
+    "Francis": ["Portugal", "Cape Verde"],
+    "Ali":     ["Switzerland", "Qatar"],
+    "Aisling": ["Germany", "Ivory Coast"],
+    "Emma":    ["Brazil", "Sweden"],
+    "Jordan":  ["Belgium", "Norway"],
+    "Kate":    ["Senegal", "Jordan"],
+    "Aoife":   ["Netherlands", "Paraguay"],
+    "Mick":    ["Croatia", "Canada"],
+    "Anne":    ["Colombia", "Ghana"],
+    "Sharon":  ["South Korea", "Czech Republic"],
+    "Maureen": ["Iran", "Haiti"],
+    "Ray":     ["Argentina", "New Zealand"],
+    "Anna":    ["Japan", "Tunisia"],
+    "Ailbhe":  ["Uruguay", "Algeria"],
+    "Declan":  ["Turkey", "Iraq"],
+    "Mary":    ["Austria", "DR Congo"],
+    "Michelle":["Morocco", "South Africa"],
+    "Kev":     ["Australia", "Saudi Arabia"],
+    "Mark":    ["Mexico", "Panama"],
+    "Adam":    ["France", "Egypt"],
+    "James":   ["England", "Bosnia-Herzegovina"],
+    "Nana":    ["USA", "Scotland"]
+  }
+}
