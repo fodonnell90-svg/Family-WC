@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/standings?live=1",
-      "schedule": "*/10 * * * *"
-    }
-  ]
-}
+{}
