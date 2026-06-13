@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compiler: {
-    // Remove console.logs in production
     removeConsole: process.env.NODE_ENV === "production",
   },
   images: {
@@ -10,6 +9,11 @@ const nextConfig = {
       { protocol: "https", hostname: "**.thesportsdb.com" },
     ],
   },
+  outputFileTracingIncludes: {
+    "/": ["./data/**/*"],
+    "/api/standings": ["./data/**/*"],
+  },
 };
 
 module.exports = nextConfig;
+
