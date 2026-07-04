@@ -4,7 +4,7 @@ export type Stage =
   | "group-1"
   | "group-2"
   | "group-3"
-  | "round-32" // WC2026 has a Round of 32
+  | "round-32"
   | "round-16"
   | "quarter"
   | "semi"
@@ -14,7 +14,7 @@ export type MatchStatus = "NS" | "LIVE" | "FT";
 
 export interface Match {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   time: string | null;
   timestamp: string | null;
   group: string | null;
@@ -28,6 +28,8 @@ export interface Match {
   city: string | null;
   homeScore: number | null;
   awayScore: number | null;
+  homePens: number | null;
+  awayPens: number | null;
   status: MatchStatus;
 }
 
@@ -44,10 +46,9 @@ export interface Draw {
   assignments: Record<string, string[]>;
 }
 
-// How far a team progressed, used for qualification bonus points.
 export type Progression =
   | "none"
-  | "group" // qualified out of group
+  | "group"
   | "round-16"
   | "quarter"
   | "semi"

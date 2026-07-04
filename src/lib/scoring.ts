@@ -9,29 +9,45 @@ import type {
 } from "./types";
 
 // ----------------------------------------------------------------------------
-// SCORING CONFIG — goals (1pt), win (3pt), draw (1pt). No progression bonuses.
+// SCORING CONFIG
+// Goals: 1pt each (regular time + extra time only, NOT penalty shootout goals)
+// Win: 3pts (including winning a penalty shootout)
+// Draw: 1pt (group stage only — no draws in knockout)
 // ----------------------------------------------------------------------------
 export const SCORING = {
-  goalPoint: 1, // per goal scored by the team
-  win: 3,       // win
-  draw: 1,      // draw
+  goalPoint: 1,
+  win: 3,
+  draw: 1,
 } as const;
 
-// Keep KO_ORDER exported so other files that import it don't break.
 const KO_ORDER = ["round-32", "round-16", "quarter", "semi", "final"] as const;
 
 function isFinished(m: Match): boolean {
   return m.status === "FT" && m.homeScore !== null && m.awayScore !== null;
 }
 
-// Live matches count toward goals and win/draw points so the table moves
-// in real time. Points self-correct on the next poll if a goal is disallowed.
 function isScorable(m: Match): boolean {
   return (
     (m.status === "FT" || m.status === "LIVE") &&
     m.homeScore !== null &&
     m.awayScore !== null
   );
+}
+
+// In knockout matches that go to penalties, homeScore/awayScore are level.
+// We use homePens/awayPens to determine who won the shootout.
+function knockoutWinner(m: Match): "home" | "away" | null {
+  if (m.round !== "knockout") return null;
+  // Won in regular time or ET
+  if ((m.homeScore ?? 0) > (m.awayScore ?? 0)) return "home";
+  if ((m.awayScore ?? 0) > (m.homeScore ?? 0)) return "away";
+  // Level after ET — check penalty shootout
+  if (m.homePens !== null && m.awayPens !== null) {
+    if (m.homePens > m.awayPens) return "home";
+    if (m.awayPens > m.homePens) return "away";
+  }
+  // Still live/unknown
+  return null;
 }
 
 function scoreTeam(team: Team, matches: Match[]): TeamScore {
@@ -45,13 +61,23 @@ function scoreTeam(team: Team, matches: Match[]): TeamScore {
     const isAway = m.away === team.name;
     if (!isHome && !isAway) continue;
 
+    // Goals: use homeScore/awayScore which is the score after 90 or 120 mins.
+    // This never includes penalty shootout goals — those are in homePens/awayPens.
     const own = isHome ? (m.homeScore as number) : (m.awayScore as number);
     const opp = isHome ? (m.awayScore as number) : (m.homeScore as number);
-
     goals += own;
 
-    if (own > opp) wins += 1;
-    else if (own === opp) draws += 1;
+    if (m.round === "knockout") {
+      // Knockout: no draws. Winner gets 3pts, loser gets 0.
+      const winner = knockoutWinner(m);
+      if ((isHome && winner === "home") || (isAway && winner === "away")) {
+        wins += 1;
+      }
+    } else {
+      // Group stage
+      if (own > opp) wins += 1;
+      else if (own === opp) draws += 1;
+    }
   }
 
   const goalPoints = goals * SCORING.goalPoint;
@@ -98,7 +124,6 @@ export function computeStandings(
 
   players.sort((a, b) => b.total - a.total || a.player.localeCompare(b.player));
 
-  // Dense ranking with ties sharing a rank.
   let lastTotal: number | null = null;
   let lastRank = 0;
   players.forEach((p, i) => {

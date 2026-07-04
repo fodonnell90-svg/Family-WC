@@ -1,8 +1,3 @@
-// Live fetch helper for TheSportsDB. Used by the optional /api/refresh route and
-// can be called from the standings route for on-the-fly live merge. Designed to
-// degrade gracefully: if the feed is unreachable, callers fall back to committed
-// fixtures + data/results.json so the app NEVER hard-depends on a third party.
-
 import type { Match } from "./types";
 
 const LEAGUE = "4429";
@@ -33,6 +28,8 @@ export interface LiveResult {
   id: string;
   homeScore: number | null;
   awayScore: number | null;
+  homePens: number | null;
+  awayPens: number | null;
   status: Match["status"];
   stage?: string;
   home?: string;
@@ -43,10 +40,6 @@ export interface LiveResult {
   date?: string;
 }
 
-// Last successful payload per round, kept in module memory. If the feed
-// rate-limits (429) or errors, we serve this instead of "no data" so live
-// scores don't vanish mid-match. Per-instance only — resets on cold start,
-// after which the Next data cache / committed data cover the gap.
 const lastGood = new Map<string, LiveResult[]>();
 
 async function fetchRound(r: string, fresh = false): Promise<LiveResult[]> {
@@ -60,10 +53,18 @@ async function fetchRound(r: string, fresh = false): Promise<LiveResult[]> {
   const results = events.map((e) => {
     const round = String(e.intRound ?? "");
     const isKo = Number(round) >= 100;
+    // homeScore/awayScore = score after 90 or 120 mins (does NOT include shootout goals).
+    // homePens/awayPens = shootout score only, used to determine winner when level after ET.
+    const homeScore = e.intHomeScore === null ? null : Number(e.intHomeScore);
+    const awayScore = e.intAwayScore === null ? null : Number(e.intAwayScore);
+    const homePens = e.intHomeScorePenalty == null ? null : Number(e.intHomeScorePenalty);
+    const awayPens = e.intAwayScorePenalty == null ? null : Number(e.intAwayScorePenalty);
     return {
       id: String(e.idEvent),
-      homeScore: e.intHomeScore === null ? null : Number(e.intHomeScore),
-      awayScore: e.intAwayScore === null ? null : Number(e.intAwayScore),
+      homeScore,
+      awayScore,
+      homePens,
+      awayPens,
       status: normaliseStatus(e.strStatus),
       stage: STAGE_BY_ROUND[round],
       ...(isKo
@@ -82,7 +83,6 @@ async function fetchRound(r: string, fresh = false): Promise<LiveResult[]> {
   return results;
 }
 
-// `fresh` skips the data cache and hits the feed directly (manual refresh).
 export async function fetchLiveResults(fresh = false): Promise<LiveResult[]> {
   const rounds = ["1", "2", "3", "125", "150", "160", "170", "200", "201"];
   const all: LiveResult[] = [];
