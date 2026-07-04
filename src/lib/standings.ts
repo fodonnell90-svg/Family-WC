@@ -71,6 +71,8 @@ export function mergeLive(base: Match[], live: LiveResult[]): Match[] {
         city: null,
         homeScore: r.homeScore ?? null,
         awayScore: r.awayScore ?? null,
+        homePens: r.homePens ?? null,
+        awayPens: r.awayPens ?? null,
         status: r.status,
       });
     }
