@@ -31,6 +31,8 @@ export function loadFixtures(): Match[] {
 export interface ResultOverride {
   homeScore?: number | null;
   awayScore?: number | null;
+  homePens?: number | null;
+  awayPens?: number | null;
   status?: Match["status"];
   stage?: string;
   // For knockout fixtures added after the draw resolves.
@@ -70,6 +72,8 @@ export function loadMatches(): Match[] {
         ...existing,
         homeScore: ov.homeScore ?? existing.homeScore,
         awayScore: ov.awayScore ?? existing.awayScore,
+        homePens: ov.homePens ?? existing.homePens,
+        awayPens: ov.awayPens ?? existing.awayPens,
         status: ov.status ?? existing.status,
         stage: ov.stage ?? existing.stage,
       });
@@ -91,6 +95,8 @@ export function loadMatches(): Match[] {
         city: null,
         homeScore: ov.homeScore ?? null,
         awayScore: ov.awayScore ?? null,
+        homePens: ov.homePens ?? null,
+        awayPens: ov.awayPens ?? null,
         status: ov.status ?? "NS",
       });
     }
