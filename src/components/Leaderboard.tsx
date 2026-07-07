@@ -11,10 +11,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { PROGRESSION_LABEL } from "@/lib/format";
 import type { Match, Standings, TeamScore } from "@/lib/types";
 
 const TIER_CLASS: Record<number, string> = {
@@ -59,10 +57,46 @@ function LiveDot({ className }: { className?: string }) {
   );
 }
 
-function TeamRow({ ts, isLive }: { ts: TeamScore; isLive: boolean }) {
+// Derive the set of eliminated teams from finished knockout matches.
+function useEliminatedTeams(matches: Match[]): Set<string> {
+  return useMemo(() => {
+    const eliminated = new Set<string>();
+    for (const m of matches) {
+      if (m.round !== "knockout" || m.status !== "FT") continue;
+      if (m.homeScore === null || m.awayScore === null) continue;
+
+      let loser: string | null = null;
+      if (m.homeScore > m.awayScore) {
+        loser = m.away;
+      } else if (m.awayScore > m.homeScore) {
+        loser = m.home;
+      } else if (m.homePens !== null && m.awayPens !== null) {
+        // Went to penalties — loser is whoever got fewer pen goals
+        loser = m.homePens > m.awayPens ? m.away : m.home;
+      }
+      if (loser) eliminated.add(loser);
+    }
+    return eliminated;
+  }, [matches]);
+}
+
+function TeamRow({
+  ts,
+  isLive,
+  isEliminated,
+}: {
+  ts: TeamScore;
+  isLive: boolean;
+  isEliminated: boolean;
+}) {
   const b = ts.breakdown;
   return (
-    <div className="flex items-center gap-3 border-b border-border/50 px-1 py-2.5 last:border-b-0">
+    <div
+      className={cn(
+        "flex items-center gap-3 border-b border-border/50 px-1 py-2.5 last:border-b-0 transition-opacity",
+        isEliminated && "opacity-35"
+      )}
+    >
       <Flag src={ts.badge} alt={ts.team} />
       <span
         className={cn(
@@ -75,7 +109,12 @@ function TeamRow({ ts, isLive }: { ts: TeamScore; isLive: boolean }) {
       <span className="min-w-0 flex-1 truncate text-sm font-semibold">
         {ts.team}
         {isLive && <LiveDot className="mb-px ml-1.5" />}
-        {ts.group && (
+        {isEliminated && (
+          <span className="ml-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            eliminated
+          </span>
+        )}
+        {!isEliminated && ts.group && (
           <span className="ml-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Grp {ts.group}
           </span>
@@ -90,11 +129,6 @@ function TeamRow({ ts, isLive }: { ts: TeamScore; isLive: boolean }) {
           <b className="text-foreground">{b.wins}</b>W <b className="text-foreground">{b.draws}</b>
           D
         </span>
-        {b.progression !== "none" && (
-          <Badge variant="gold" className="px-1.5 py-0 text-[9px] uppercase tracking-wider">
-            {PROGRESSION_LABEL[b.progression]}
-          </Badge>
-        )}
       </span>
       <span className="w-9 shrink-0 text-right text-sm font-bold tabular-nums">{b.total}</span>
     </div>
@@ -110,6 +144,7 @@ export default function Leaderboard({
 }) {
   const leaderTotal = standings.players[0]?.total ?? 0;
   const leader = standings.players.find((p) => p.rank === 1);
+
   const liveTeams = useMemo(() => {
     const set = new Set<string>();
     for (const m of matches) {
@@ -120,6 +155,8 @@ export default function Leaderboard({
     return set;
   }, [matches]);
 
+  const eliminatedTeams = useEliminatedTeams(matches);
+
   return (
     <Accordion
       type="multiple"
@@ -128,6 +165,7 @@ export default function Leaderboard({
     >
       {standings.players.map((p, i) => {
         const pct = leaderTotal > 0 ? Math.round((p.total / leaderTotal) * 100) : 0;
+        const allEliminated = p.teams.every((t) => eliminatedTeams.has(t.team));
         return (
           <AccordionItem
             key={p.player}
@@ -135,7 +173,8 @@ export default function Leaderboard({
             style={{ animationDelay: `${i * 60}ms` }}
             className={cn(
               "animate-rise rounded-xl border bg-card px-4 ring-1 ring-foreground/5",
-              p.rank === 1 && leaderTotal > 0 && "border-primary/40 ring-primary/20"
+              p.rank === 1 && leaderTotal > 0 && "border-primary/40 ring-primary/20",
+              allEliminated && "opacity-60"
             )}
           >
             <AccordionTrigger className="gap-3 py-3.5 hover:no-underline">
@@ -151,7 +190,13 @@ export default function Leaderboard({
                 <span className="block truncate text-base font-bold">{p.player}</span>
                 <span className="mt-1.5 flex items-center gap-1">
                   {p.teams.map((t) => (
-                    <span key={t.team} className="relative">
+                    <span
+                      key={t.team}
+                      className={cn(
+                        "relative transition-opacity",
+                        eliminatedTeams.has(t.team) && "opacity-30"
+                      )}
+                    >
                       <Flag src={t.badge} alt={t.team} size="sm" />
                       {liveTeams.has(t.team) && (
                         <LiveDot className="absolute -right-0.5 -top-0.5 ring-2 ring-card" />
@@ -173,7 +218,12 @@ export default function Leaderboard({
             <AccordionContent className="pb-3">
               <div className="border-t pt-1">
                 {p.teams.map((ts) => (
-                  <TeamRow key={ts.team} ts={ts} isLive={liveTeams.has(ts.team)} />
+                  <TeamRow
+                    key={ts.team}
+                    ts={ts}
+                    isLive={liveTeams.has(ts.team)}
+                    isEliminated={eliminatedTeams.has(ts.team)}
+                  />
                 ))}
                 <PlayerDetail player={p} matches={matches} />
               </div>
