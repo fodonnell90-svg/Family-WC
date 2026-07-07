@@ -59,6 +59,11 @@ const RESULTS: Record<string, Partial<Match> & { home: string; away: string; hom
   "ko_r16_1":  { home:"Canada",       away:"Morocco",          homeScore:0, awayScore:3, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-04" },
   "ko_r16_2":  { home:"Paraguay",     away:"France",           homeScore:0, awayScore:1, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-04" },
   "ko_r16_3":  { home:"Brazil",       away:"Norway",           homeScore:1, awayScore:2, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-05" },
+  "ko_r16_4":  { home:"Mexico",       away:"England",          homeScore:2, awayScore:3, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-06" },
+  "ko_r16_5":  { home:"Portugal",     away:"Spain",            homeScore:0, awayScore:1, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-06" },
+  "ko_r16_6":  { home:"USA",          away:"Belgium",          homeScore:1, awayScore:4, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-07" },
+  "ko_r16_7":  { home:"Argentina",    away:"Egypt",            homeScore:3, awayScore:2, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-07" },
+  "ko_r16_8":  { home:"Switzerland",  away:"Colombia",         homeScore:0, awayScore:0, homePens:4,    awayPens:3,    status:"FT", stage:"round-16", round:"knockout", date:"2026-07-07" },
 };
 
 export function loadDraw(): Draw {
