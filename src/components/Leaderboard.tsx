@@ -57,10 +57,23 @@ function LiveDot({ className }: { className?: string }) {
   );
 }
 
-// Derive the set of eliminated teams from finished knockout matches.
+// Derive the set of eliminated teams from all finished matches.
+// A team is eliminated if:
+// - They lost a knockout match (or lost on pens), OR
+// - They never appeared in any knockout match at all (knocked out in group stage)
 function useEliminatedTeams(matches: Match[]): Set<string> {
   return useMemo(() => {
     const eliminated = new Set<string>();
+    const knockoutTeams = new Set<string>();
+
+    // First pass: find all teams that made it to the knockout stage
+    for (const m of matches) {
+      if (m.round !== "knockout") continue;
+      knockoutTeams.add(m.home);
+      knockoutTeams.add(m.away);
+    }
+
+    // Second pass: find knockout losers
     for (const m of matches) {
       if (m.round !== "knockout" || m.status !== "FT") continue;
       if (m.homeScore === null || m.awayScore === null) continue;
@@ -71,11 +84,19 @@ function useEliminatedTeams(matches: Match[]): Set<string> {
       } else if (m.awayScore > m.homeScore) {
         loser = m.home;
       } else if (m.homePens !== null && m.awayPens !== null) {
-        // Went to penalties — loser is whoever got fewer pen goals
         loser = m.homePens > m.awayPens ? m.away : m.home;
       }
       if (loser) eliminated.add(loser);
     }
+
+    // Third pass: any team that played group stage but never appeared in knockouts
+    // is also eliminated (knocked out at group stage)
+    for (const m of matches) {
+      if (m.round !== "group") continue;
+      if (!knockoutTeams.has(m.home)) eliminated.add(m.home);
+      if (!knockoutTeams.has(m.away)) eliminated.add(m.away);
+    }
+
     return eliminated;
   }, [matches]);
 }
