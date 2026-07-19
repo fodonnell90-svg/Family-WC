@@ -64,6 +64,7 @@ const RESULTS: Record<string, Partial<Match> & { home: string; away: string; hom
   "ko_r16_6":  { home:"USA",          away:"Belgium",          homeScore:1, awayScore:4, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-07" },
   "ko_r16_7":  { home:"Argentina",    away:"Egypt",            homeScore:3, awayScore:2, homePens:null, awayPens:null, status:"FT", stage:"round-16", round:"knockout", date:"2026-07-07" },
   "ko_r16_8":  { home:"Switzerland",  away:"Colombia",         homeScore:0, awayScore:0, homePens:4,    awayPens:3,    status:"FT", stage:"round-16", round:"knockout", date:"2026-07-07" },
+  "ko_3rd":    { home:"England",      away:"France",           homeScore:6, awayScore:4, homePens:null, awayPens:null, status:"FT", stage:"third-place", round:"knockout", date:"2026-07-18" },
 };
 
 export function loadDraw(): Draw {
