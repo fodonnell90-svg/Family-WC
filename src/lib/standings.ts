@@ -1,15 +1,11 @@
 // Single place that assembles the live payload (standings + matches) so the
 // page and the API route can never drift apart.
-
 import { loadDraw, loadMatches, loadTeams } from "./data";
 import { matchKickoff } from "./format";
 import { fetchLiveResults, type LiveResult } from "./live";
 import { computeStandings } from "./scoring";
 import type { Match, Standings } from "./types";
 
-// The feed sometimes never flips a match from 2H to FT. No match is still
-// running this long after kickoff, so treat older LIVE statuses as finished.
-// Group games can't go past ~2h; knockouts can run ~3h with ET + penalties.
 const MAX_LIVE_MS_GROUP = 2.5 * 60 * 60 * 1000;
 const MAX_LIVE_MS_KNOCKOUT = 3.5 * 60 * 60 * 1000;
 
@@ -28,22 +24,30 @@ export interface LivePayload {
   matches: Match[];
 }
 
-/**
- * Merge live feed results onto the base matches (committed fixtures + manual
- * overrides). Live scores win; if the feed is down, base data stands. Knockout
- * fixtures present only in the feed are appended as they get drawn.
- */
+// Teams in the third place playoff — no points awarded for this match.
+const THIRD_PLACE_TEAMS = new Set(["France", "England"]);
+
+function isThirdPlaceMatch(r: LiveResult): boolean {
+  // The third place match is the only knockout match where both teams
+  // are known third-place finalists. We identify it by stage name or
+  // by checking if both teams are the known third-place finalists.
+  if (r.stage === "third-place" || r.stage === "third_place" || r.stage === "3rd-place") return true;
+  if (r.round === "knockout" && r.home && r.away) {
+    if (THIRD_PLACE_TEAMS.has(r.home) && THIRD_PLACE_TEAMS.has(r.away)) return true;
+  }
+  return false;
+}
+
 export function mergeLive(base: Match[], live: LiveResult[]): Match[] {
   const byId = new Map(base.map((m) => [m.id, { ...m }]));
   for (const r of live) {
+    // Skip the third place playoff — no points awarded for this match.
+    if (isThirdPlaceMatch(r)) continue;
+
     const ex = byId.get(r.id);
-    // The feed only wins when it actually has something; otherwise committed
-    // fixtures + manual overrides stand (the feed reports NS/null pre-match).
     const feedHasData = r.status !== "NS" || r.homeScore !== null || r.awayScore !== null;
     if (ex) {
       if (!feedHasData) continue;
-      // A hand-set FT in results.json outranks a non-finished feed status,
-      // so a stuck feed can always be corrected manually.
       if (ex.status === "FT" && r.status !== "FT") continue;
       byId.set(r.id, {
         ...ex,
