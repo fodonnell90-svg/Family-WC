@@ -8,12 +8,6 @@ import type {
   TeamScore,
 } from "./types";
 
-// ----------------------------------------------------------------------------
-// SCORING CONFIG
-// Goals: 1pt each (regular time + extra time only, NOT penalty shootout goals)
-// Win: 3pts (including winning a penalty shootout)
-// Draw: 1pt (group stage only — no draws in knockout)
-// ----------------------------------------------------------------------------
 export const SCORING = {
   goalPoint: 1,
   win: 3,
@@ -34,19 +28,19 @@ function isScorable(m: Match): boolean {
   );
 }
 
-// In knockout matches that go to penalties, homeScore/awayScore are level.
-// We use homePens/awayPens to determine who won the shootout.
+// Third place playoff does not count for scoring — no goals or win points.
+function isThirdPlace(m: Match): boolean {
+  return m.stage === "third-place" || m.stage === "third_place" || m.stage === "3rd-place";
+}
+
 function knockoutWinner(m: Match): "home" | "away" | null {
   if (m.round !== "knockout") return null;
-  // Won in regular time or ET
   if ((m.homeScore ?? 0) > (m.awayScore ?? 0)) return "home";
   if ((m.awayScore ?? 0) > (m.homeScore ?? 0)) return "away";
-  // Level after ET — check penalty shootout
   if (m.homePens !== null && m.awayPens !== null) {
     if (m.homePens > m.awayPens) return "home";
     if (m.awayPens > m.homePens) return "away";
   }
-  // Still live/unknown
   return null;
 }
 
@@ -57,24 +51,23 @@ function scoreTeam(team: Team, matches: Match[]): TeamScore {
 
   for (const m of matches) {
     if (!isScorable(m)) continue;
+    if (isThirdPlace(m)) continue; // skip third place playoff entirely
+
     const isHome = m.home === team.name;
     const isAway = m.away === team.name;
     if (!isHome && !isAway) continue;
 
-    // Goals: use homeScore/awayScore which is the score after 90 or 120 mins.
-    // This never includes penalty shootout goals — those are in homePens/awayPens.
     const own = isHome ? (m.homeScore as number) : (m.awayScore as number);
     const opp = isHome ? (m.awayScore as number) : (m.homeScore as number);
+
     goals += own;
 
     if (m.round === "knockout") {
-      // Knockout: no draws. Winner gets 3pts, loser gets 0.
       const winner = knockoutWinner(m);
       if ((isHome && winner === "home") || (isAway && winner === "away")) {
         wins += 1;
       }
     } else {
-      // Group stage
       if (own > opp) wins += 1;
       else if (own === opp) draws += 1;
     }
