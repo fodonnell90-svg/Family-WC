@@ -24,32 +24,40 @@ export interface LivePayload {
   matches: Match[];
 }
 
-// Teams in the third place playoff — no points awarded for this match.
+// Third place teams — skip this match entirely, no points awarded.
 const THIRD_PLACE_TEAMS = new Set(["France", "England"]);
 
-function isThirdPlaceMatch(r: LiveResult): boolean {
-  // The third place match is the only knockout match where both teams
-  // are known third-place finalists. We identify it by stage name or
-  // by checking if both teams are the known third-place finalists.
-  if (r.stage === "third-place" || r.stage === "third_place" || r.stage === "3rd-place") return true;
-  if (r.round === "knockout" && r.home && r.away) {
-    if (THIRD_PLACE_TEAMS.has(r.home) && THIRD_PLACE_TEAMS.has(r.away)) return true;
-  }
-  return false;
+function isThirdPlaceMatch(home?: string, away?: string): boolean {
+  if (!home || !away) return false;
+  return THIRD_PLACE_TEAMS.has(home) && THIRD_PLACE_TEAMS.has(away);
 }
 
 export function mergeLive(base: Match[], live: LiveResult[]): Match[] {
   const byId = new Map(base.map((m) => [m.id, { ...m }]));
-  for (const r of live) {
-    // Skip the third place playoff — no points awarded for this match.
-    if (isThirdPlaceMatch(r)) continue;
 
-    const ex = byId.get(r.id);
+  // Also build a lookup by "home|away" so we can detect duplicates
+  // where the API returns the same fixture under a different ID.
+  const byTeamPair = new Map(
+    base.map((m) => [`${m.home}|${m.away}`, m.id])
+  );
+
+  for (const r of live) {
+    // Skip third place playoff entirely.
+    if (isThirdPlaceMatch(r.home, r.away)) continue;
+
     const feedHasData = r.status !== "NS" || r.homeScore !== null || r.awayScore !== null;
+    if (!feedHasData) continue;
+
+    // Check if this match already exists under a different ID (dedup by team pair).
+    const teamPairKey = r.home && r.away ? `${r.home}|${r.away}` : null;
+    const existingId = teamPairKey ? byTeamPair.get(teamPairKey) : null;
+    const resolvedId = existingId ?? r.id;
+
+    const ex = byId.get(resolvedId);
     if (ex) {
-      if (!feedHasData) continue;
+      // Don't overwrite a manually-set FT with a non-FT feed status.
       if (ex.status === "FT" && r.status !== "FT") continue;
-      byId.set(r.id, {
+      byId.set(resolvedId, {
         ...ex,
         homeScore: r.homeScore ?? ex.homeScore,
         awayScore: r.awayScore ?? ex.awayScore,
@@ -59,6 +67,7 @@ export function mergeLive(base: Match[], live: LiveResult[]): Match[] {
         stage: r.stage ?? ex.stage,
       });
     } else if (r.home && r.away && r.stage) {
+      // New knockout fixture from the feed — add it.
       byId.set(r.id, {
         id: r.id,
         date: r.date ?? "",
@@ -79,8 +88,11 @@ export function mergeLive(base: Match[], live: LiveResult[]): Match[] {
         awayPens: r.awayPens ?? null,
         status: r.status,
       });
+      // Register this team pair so future duplicates resolve to this ID.
+      if (teamPairKey) byTeamPair.set(teamPairKey, r.id);
     }
   }
+
   return Array.from(byId.values()).sort((a, b) =>
     (a.timestamp ?? a.date ?? "").localeCompare(b.timestamp ?? b.date ?? ""),
   );
